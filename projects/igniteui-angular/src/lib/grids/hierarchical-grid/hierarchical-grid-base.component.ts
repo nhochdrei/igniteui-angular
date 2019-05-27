@@ -26,6 +26,7 @@ import { IgxHierarchicalGridNavigationService } from './hierarchical-grid-naviga
 import { IgxGridSummaryService } from '../summaries/grid-summary.service';
 import { IgxGridSelectionService, IgxGridCRUDService } from '../../core/grid-selection';
 import { IgxChildGridRowComponent } from './child-grid-row.component';
+import { IgxGridSizingService } from '../grid-sizing.service';
 
 export const IgxHierarchicalTransactionServiceFactory = {
     provide: IgxGridTransaction,
@@ -93,6 +94,7 @@ export abstract class IgxHierarchicalGridBaseComponent extends IgxGridBaseCompon
         differs: IterableDiffers,
         viewRef: ViewContainerRef,
         navigation: IgxHierarchicalGridNavigationService,
+        sizingService: IgxGridSizingService,
         filteringService: IgxFilteringService,
         @Inject(IgxOverlayService) protected overlayService: IgxOverlayService,
         public summaryService: IgxGridSummaryService,
@@ -111,6 +113,7 @@ export abstract class IgxHierarchicalGridBaseComponent extends IgxGridBaseCompon
             differs,
             viewRef,
             navigation,
+            sizingService,
             filteringService,
             overlayService,
             summaryService,

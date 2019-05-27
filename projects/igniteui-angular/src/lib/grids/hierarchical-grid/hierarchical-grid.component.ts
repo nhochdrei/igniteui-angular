@@ -41,6 +41,7 @@ import { IgxGridSelectionService, IgxGridCRUDService } from '../../core/grid-sel
 import { IgxOverlayService } from '../../services/index';
 import { IgxColumnResizingService } from '../grid-column-resizing.service';
 import { IgxForOfSyncService } from '../../directives/for-of/for_of.sync.service';
+import { IgxGridSizingService } from '../grid-sizing.service';
 
 let NEXT_ID = 0;
 
@@ -300,6 +301,7 @@ export class IgxHierarchicalGridComponent extends IgxHierarchicalGridBaseCompone
         differs: IterableDiffers,
         viewRef: ViewContainerRef,
         navigation: IgxHierarchicalGridNavigationService,
+        sizingService: IgxGridSizingService,
         filteringService: IgxFilteringService,
         @Inject(IgxOverlayService) protected overlayService: IgxOverlayService,
         public summaryService: IgxGridSummaryService,
@@ -318,6 +320,7 @@ export class IgxHierarchicalGridComponent extends IgxHierarchicalGridBaseCompone
             differs,
             viewRef,
             navigation,
+            sizingService,
             filteringService,
             overlayService,
             summaryService,

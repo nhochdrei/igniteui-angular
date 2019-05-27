@@ -6,6 +6,7 @@ import {
 import { GridBaseAPIService } from '../api.service';
 import { IgxGridBaseComponent, IgxGridTransaction, IFocusChangeEventArgs, IGridDataBindable } from '../grid-base.component';
 import { IgxGridNavigationService } from '../grid-navigation.service';
+import { IgxGridSizingService } from '../grid-sizing.service';
 import { IgxGridAPIService } from './grid-api.service';
 import { ISortingExpression } from '../../data-operations/sorting-expression.interface';
 import { cloneArray } from '../../core/utils';
@@ -63,7 +64,7 @@ export interface IGroupingDoneEventArgs {
     providers: [IgxGridNavigationService, IgxGridSummaryService, IgxGridSelectionService, IgxGridCRUDService,
         { provide: GridBaseAPIService, useClass: IgxGridAPIService },
         { provide: IgxGridBaseComponent, useExisting: forwardRef(() => IgxGridComponent) },
-        IgxFilteringService, IgxColumnResizingService, IgxForOfSyncService
+        IgxFilteringService, IgxColumnResizingService, IgxForOfSyncService, IgxGridSizingService
     ],
     selector: 'igx-grid',
     templateUrl: './grid.component.html'
@@ -179,13 +180,14 @@ export class IgxGridComponent extends IgxGridBaseComponent implements IGridDataB
         differs: IterableDiffers,
         viewRef: ViewContainerRef,
         navigation: IgxGridNavigationService,
+        sizingService: IgxGridSizingService,
         filteringService: IgxFilteringService,
         @Inject(IgxOverlayService) protected overlayService: IgxOverlayService,
         summaryService: IgxGridSummaryService,
         @Optional() @Inject(DisplayDensityToken) protected _displayDensityOptions: IDisplayDensityOptions) {
             super(selectionService,
                   crudService, gridAPI, selection, _transactions, elementRef, zone, document, cdr, resolver, differs, viewRef, navigation,
-                  filteringService, overlayService, summaryService, _displayDensityOptions);
+                  sizingService, filteringService, overlayService, summaryService, _displayDensityOptions);
             this._gridAPI = <IgxGridAPIService>gridAPI;
     }
 

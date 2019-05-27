@@ -36,6 +36,7 @@ import { IgxOverlayService } from '../../services/index';
 import { IgxColumnResizingService } from '../grid-column-resizing.service';
 import { first } from 'rxjs/operators';
 import { IgxForOfSyncService } from '../../directives/for-of/for_of.sync.service';
+import { IgxGridSizingService } from '../grid-sizing.service';
 
 let NEXT_ID = 0;
 
@@ -314,13 +315,14 @@ export class IgxTreeGridComponent extends IgxGridBaseComponent implements IGridD
         differs: IterableDiffers,
         viewRef: ViewContainerRef,
         navigation: IgxTreeGridNavigationService,
+        sizingService: IgxGridSizingService,
         filteringService: IgxFilteringService,
         @Inject(IgxOverlayService) protected overlayService: IgxOverlayService,
         summaryService: IgxGridSummaryService,
         @Optional() @Inject(DisplayDensityToken) protected _displayDensityOptions: IDisplayDensityOptions) {
             super(selectionService, crudService, gridAPI, selection,
                 _transactions, elementRef, zone, document, cdr, resolver, differs, viewRef, navigation,
-                filteringService, overlayService, summaryService, _displayDensityOptions);
+                sizingService, filteringService, overlayService, summaryService, _displayDensityOptions);
         this._gridAPI = <IgxTreeGridAPIService>gridAPI;
     }
 

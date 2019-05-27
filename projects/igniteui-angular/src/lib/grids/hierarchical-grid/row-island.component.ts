@@ -38,6 +38,7 @@ import { IgxOverlayService } from '../../services/index';
 import { takeUntil } from 'rxjs/operators';
 import { IgxColumnComponent } from '../column.component';
 import { IgxRowIslandAPIService } from './row-island-api.service';
+import { IgxGridSizingService } from '../grid-sizing.service';
 export interface IGridCreatedEventArgs {
     owner: IgxRowIslandComponent;
     parentID: any;
@@ -200,6 +201,7 @@ export class IgxRowIslandComponent extends IgxHierarchicalGridBaseComponent
         differs: IterableDiffers,
         viewRef: ViewContainerRef,
         navigation: IgxHierarchicalGridNavigationService,
+        sizingService: IgxGridSizingService,
         filteringService: IgxFilteringService,
         @Inject(IgxOverlayService) protected overlayService: IgxOverlayService,
         public summaryService: IgxGridSummaryService,
@@ -219,6 +221,7 @@ export class IgxRowIslandComponent extends IgxHierarchicalGridBaseComponent
             differs,
             viewRef,
             navigation,
+            sizingService,
             filteringService,
             overlayService,
             summaryService,
