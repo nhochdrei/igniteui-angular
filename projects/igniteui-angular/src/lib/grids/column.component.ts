@@ -288,8 +288,10 @@ export class IgxColumnComponent implements AfterContentInit {
     public set width(value: string) {
         if (value) {
             this._calcWidth = null;
+            this.calcPixelWidth = NaN;
             this.widthSetByUser = true;
             this._width = value;
+            this.cacheCalcWidth();
         }
     }
 
