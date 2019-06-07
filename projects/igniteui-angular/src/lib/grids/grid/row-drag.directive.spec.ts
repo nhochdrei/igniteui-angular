@@ -211,11 +211,11 @@ describe('IgxGrid - Row Drag Tests', () => {
             expect(row.grid.rowDragging).toBeFalsy();
             expect(row.element.nativeElement.classList.contains(CSS_CLASS_DRAG_ROW)).toBeFalsy();
         }));
-        it('should align horizontal scrollbar with first column when column pinning is disabled', fakeAsync(() => {
+        fit('should align horizontal scrollbar with first column when column pinning is disabled', async() => {
             // has no draggable and selectable rows
             grid.rowSelectable = false;
             grid.rowDraggable = false;
-            tick();
+            await wait();
             fixture.detectChanges();
             let rowSelectElement: DebugElement = fixture.debugElement.query(By.css(CSS_CLASS_SELECTION_CHECKBOX));
             let dragIndicatorElement: DebugElement = fixture.debugElement.query(By.css('.' + CSS_CLASS_DRAG_INDICATOR));
@@ -226,8 +226,9 @@ describe('IgxGrid - Row Drag Tests', () => {
             // has draggable rows and has no selectable rows
             grid.rowSelectable = false;
             grid.rowDraggable = true;
-            tick();
+            await wait();
             fixture.detectChanges();
+          
             rowSelectElement = fixture.debugElement.query(By.css(CSS_CLASS_SELECTION_CHECKBOX));
             dragIndicatorElement = fixture.debugElement.query(By.css('.' + CSS_CLASS_DRAG_INDICATOR));
             horizontalScrollbarElement = fixture.debugElement.query(By.css(CSS_CLASS_VIRTUAL_HSCROLLBAR));
@@ -239,14 +240,16 @@ describe('IgxGrid - Row Drag Tests', () => {
             // has draggable and selectable rows
             grid.rowSelectable = true;
             grid.rowDraggable = true;
+            await wait();
             fixture.detectChanges();
+          
             rowSelectElement = fixture.debugElement.query(By.css(CSS_CLASS_SELECTION_CHECKBOX));
             dragIndicatorElement = fixture.debugElement.query(By.css('.' + CSS_CLASS_DRAG_INDICATOR));
             horizontalScrollbarElement = fixture.debugElement.query(By.css(CSS_CLASS_VIRTUAL_HSCROLLBAR));
             const rowSelectRect = rowSelectElement.nativeElement.getBoundingClientRect();
             horizontalScrollbarRect = horizontalScrollbarElement.nativeElement.getBoundingClientRect();
             expect(rowSelectRect.right).toBe(horizontalScrollbarRect.left);
-        }));
+        });
         it('should align horizontal scrollbar with first non-pinned column when column pinning is enabled', fakeAsync(() => {
             grid.pinColumn('ProductName');
             tick();

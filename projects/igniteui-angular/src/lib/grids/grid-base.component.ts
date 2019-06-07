@@ -549,7 +549,11 @@ export abstract class IgxGridBaseComponent extends DisplayDensityBase implements
             // should selection persist?
             this.allRowsSelected = false;
             this.deselectAllRows();
-            this.calculateGridSizes();
+            requestAnimationFrame(() => {
+                if (!this._destroyed) {
+                    this.reflow();
+                }
+            });
         }
     }
 
@@ -568,7 +572,11 @@ export abstract class IgxGridBaseComponent extends DisplayDensityBase implements
     set rowDraggable(val: boolean) {
         this._rowDrag = val;
         if (this.gridAPI.grid && this.columnList) {
-            this.calculateGridSizes();
+            requestAnimationFrame(() => {
+                if (!this._destroyed) {
+                    this.reflow();
+                }
+            });
         }
     }
 
