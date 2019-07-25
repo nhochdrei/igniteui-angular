@@ -14,4 +14,26 @@ export class HVirtualHelperComponent {
     public cssClasses = 'igx-vhelper--horizontal';
 
     constructor(public elementRef: ElementRef) { }
+
+    private _scrollPosition = null;
+    
+    /**
+     * @hidden
+     * @internal
+     */
+    public get scrollPosition(): number {
+        if (this._scrollPosition === null) {
+            this._scrollPosition = this._vcr.element.nativeElement.scrollLeft;
+        }
+        return this._scrollPosition;
+    }
+    /**
+     * @hidden
+     * @internal
+     */
+    public set scrollPosition(val: number) {
+        this._scrollPosition = val;
+        this._vcr.element.nativeElement.scrollLeft = val;
+    }
+
 }

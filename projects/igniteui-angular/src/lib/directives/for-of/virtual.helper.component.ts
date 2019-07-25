@@ -35,4 +35,25 @@ export class VirtualHelperComponent implements OnDestroy {
         this.destroyed = true;
     }
 
+
+    private _scrollPosition = null;
+    
+    /**
+     * @hidden
+     * @internal
+     */
+    public get scrollPosition(): number {
+        if (this._scrollPosition === null) {
+            this._scrollPosition = this._vcr.element.nativeElement.scrollTop;
+        }
+        return this._scrollPosition;
+    }
+    /**
+     * @hidden
+     * @internal
+     */
+    public set scrollPosition(val: number) {
+        this._scrollPosition = val;
+        this._vcr.element.nativeElement.scrollTop = val;
+    }
 }

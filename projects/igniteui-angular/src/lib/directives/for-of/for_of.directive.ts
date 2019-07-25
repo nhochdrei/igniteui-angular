@@ -284,18 +284,17 @@ export class IgxForOfDirective<T> implements OnInit, OnChanges, DoCheck, OnDestr
      * @internal
      */
     public get scrollPosition(): number {
-        return this._scrollPosition;
+        const helper = this.hvh || this.vh || this.igxForScrollContainer.hvh || this.igxForScrollContainer.vh;
+        return helper ? helper.instance.scrollPosition : 0;
     }
     /**
      * @hidden
      * @internal
      */
     public set scrollPosition(val: number) {
-        this._scrollPosition = val;
-        if (this.igxForScrollOrientation === 'horizontal' && this.hScroll) {
-            this.hScroll.scrollLeft = val;
-        } else if (this.vh) {
-            this.vh.instance.elementRef.nativeElement.scrollTop = val;
+        const helper = this.hvh || this.vh || this.igxForScrollContainer.hvh || this.igxForScrollContainer.vh;
+        if (helper) {
+            helper.instance.scrollPosition = val;
         }
     }
 
@@ -340,26 +339,6 @@ export class IgxForOfDirective<T> implements OnInit, OnChanges, DoCheck, OnDestr
             // On Edge and IE when scrolling on touch the page scroll instead of the grid.
             this.dc.instance._viewContainer.element.nativeElement.style.touchAction = 'none';
         }
-        if (this.igxForOf && this.igxForOf.length) {
-            totalSize = this.initSizesCache(this.igxForOf);
-            this.hScroll = this.getElement(vc, 'igx-horizontal-virtual-helper');
-            this.state.chunkSize = this._calculateChunkSize();
-            this.dc.instance.notVirtual = !(this.igxForContainerSize && this.state.chunkSize < this.igxForOf.length);
-            if (this.hScroll) {
-                this._scrollPosition = this.hScroll.scrollLeft;
-                this.state.startIndex = Math.min(this.getIndexAt(this.scrollPosition, this.sizesCache, 0),
-                    this.igxForOf.length - this.state.chunkSize);
-            }
-            for (let i = this.state.startIndex; i < this.state.startIndex + this.state.chunkSize &&
-                    this.igxForOf[i] !== undefined; i++) {
-                const input = this.igxForOf[i];
-                const embeddedView = this.dc.instance._vcr.createEmbeddedView(
-                    this._template,
-                    new IgxForOfContext<T>(input, this.getContextIndex(input), this.igxForOf.length)
-                );
-                this._embeddedViews.push(embeddedView);
-            }
-        }
 
         if (this.igxForScrollOrientation === 'vertical') {
             this.dc.instance._viewContainer.element.nativeElement.style.top = '0px';
@@ -395,6 +374,26 @@ export class IgxForOfDirective<T> implements OnInit, OnChanges, DoCheck, OnDestr
                 });
             }
             this._updateHScrollOffset();
+        }
+
+        if (this.igxForOf && this.igxForOf.length) {
+            totalSize = this.initSizesCache(this.igxForOf);
+            this.hScroll = this.getElement(vc, 'igx-horizontal-virtual-helper');
+            this.state.chunkSize = this._calculateChunkSize();
+            this.dc.instance.notVirtual = !(this.igxForContainerSize && this.state.chunkSize < this.igxForOf.length);
+            if (this.hScroll) {
+                this.state.startIndex = Math.min(this.getIndexAt(this.scrollPosition, this.sizesCache, 0),
+                    this.igxForOf.length - this.state.chunkSize);
+            }
+            for (let i = this.state.startIndex; i < this.state.startIndex + this.state.chunkSize &&
+                    this.igxForOf[i] !== undefined; i++) {
+                const input = this.igxForOf[i];
+                const embeddedView = this.dc.instance._vcr.createEmbeddedView(
+                    this._template,
+                    new IgxForOfContext<T>(input, this.getContextIndex(input), this.igxForOf.length)
+                );
+                this._embeddedViews.push(embeddedView);
+            }
         }
     }
 
