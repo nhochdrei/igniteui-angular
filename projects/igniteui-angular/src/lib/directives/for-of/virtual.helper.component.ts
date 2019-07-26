@@ -8,6 +8,8 @@ export class VirtualHelperComponent implements OnDestroy {
     @HostBinding('scrollTop')
     public scrollTop;
 
+    private _scrollPosition = null;
+
     @ViewChild('container', { read: ViewContainerRef, static: true }) public _vcr;
     @Input() public itemsLength: number;
 
@@ -35,9 +37,6 @@ export class VirtualHelperComponent implements OnDestroy {
         this.destroyed = true;
     }
 
-
-    private _scrollPosition = null;
-    
     /**
      * @hidden
      * @internal

@@ -16,7 +16,7 @@ export class HVirtualHelperComponent {
     constructor(public elementRef: ElementRef) { }
 
     private _scrollPosition = null;
-    
+
     /**
      * @hidden
      * @internal

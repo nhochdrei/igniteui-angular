@@ -391,7 +391,8 @@ export class IgxForOfDirective<T> implements OnInit, OnChanges, DoCheck, OnDestr
                 this._embeddedViews.push(embeddedView);
             }
         }
-        const helper = this.hvh || this.vh || this.igxForScrollContainer.hvh || this.igxForScrollContainer.vh;
+        const helper = this.hvh || this.vh ||
+            (this.igxForScrollContainer ? this.igxForScrollContainer.hvh || this.igxForScrollContainer.vh : null);
         if (helper) {
             this._scrollInstance = helper.instance;
         }
