@@ -393,9 +393,7 @@ export class IgxForOfDirective<T> implements OnInit, OnChanges, DoCheck, OnDestr
         }
         const helper = this.hvh || this.vh ||
             (this.igxForScrollContainer ? this.igxForScrollContainer.hvh || this.igxForScrollContainer.vh : null);
-        if (helper) {
-            this._scrollInstance = helper.instance;
-        }
+        this._scrollInstance = helper ? helper.instance : { updateScroll: () => {} };
     }
 
     /**
