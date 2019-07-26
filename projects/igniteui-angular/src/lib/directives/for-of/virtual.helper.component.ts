@@ -44,7 +44,7 @@ export class VirtualHelperComponent implements OnDestroy {
      */
     public get scrollPosition(): number {
         if (this._scrollPosition === null) {
-            this._scrollPosition = this._vcr.element.nativeElement.scrollTop;
+            this._scrollPosition = this.elementRef.nativeElement.scrollTop;
         }
         return this._scrollPosition;
     }
@@ -54,6 +54,10 @@ export class VirtualHelperComponent implements OnDestroy {
      */
     public set scrollPosition(val: number) {
         this._scrollPosition = val;
-        this._vcr.element.nativeElement.scrollTop = val;
+        this.elementRef.nativeElement.scrollTop = val;
+    }
+
+    public updateScroll(val: number) {
+        this._scrollPosition = val;
     }
 }

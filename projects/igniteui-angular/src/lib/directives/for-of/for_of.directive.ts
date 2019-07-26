@@ -212,6 +212,7 @@ export class IgxForOfDirective<T> implements OnInit, OnChanges, DoCheck, OnDestr
     protected _sizesCache: number[] = [];
     protected vh: ComponentRef<VirtualHelperComponent>;
     protected hvh: ComponentRef<HVirtualHelperComponent>;
+    protected _scrollInstance: VirtualHelperComponent | HVirtualHelperComponent;
     protected _differ: IterableDiffer<T> | null = null;
     protected _trackByFn: TrackByFunction<T>;
     protected heightCache = [];
@@ -259,9 +260,6 @@ export class IgxForOfDirective<T> implements OnInit, OnChanges, DoCheck, OnDestr
     protected _bScrollInternal = false;
     // End properties related to virtual height handling
 
-    /** caching scroll position reduces reflows */
-    protected _scrollPosition = 0;
-
     protected _embeddedViews: Array<EmbeddedViewRef<any>> = [];
 
     constructor(
@@ -284,17 +282,15 @@ export class IgxForOfDirective<T> implements OnInit, OnChanges, DoCheck, OnDestr
      * @internal
      */
     public get scrollPosition(): number {
-        const helper = this.hvh || this.vh || this.igxForScrollContainer.hvh || this.igxForScrollContainer.vh;
-        return helper ? helper.instance.scrollPosition : 0;
+        return this._scrollInstance ? this._scrollInstance.scrollPosition : 0;
     }
     /**
      * @hidden
      * @internal
      */
     public set scrollPosition(val: number) {
-        const helper = this.hvh || this.vh || this.igxForScrollContainer.hvh || this.igxForScrollContainer.vh;
-        if (helper) {
-            helper.instance.scrollPosition = val;
+        if (this._scrollInstance) {
+            this._scrollInstance.scrollPosition = val;
         }
     }
 
@@ -394,6 +390,10 @@ export class IgxForOfDirective<T> implements OnInit, OnChanges, DoCheck, OnDestr
                 );
                 this._embeddedViews.push(embeddedView);
             }
+        }
+        const helper = this.hvh || this.vh || this.igxForScrollContainer.hvh || this.igxForScrollContainer.vh;
+        if (helper) {
+            this._scrollInstance = helper.instance;
         }
     }
 
@@ -685,7 +685,7 @@ export class IgxForOfDirective<T> implements OnInit, OnChanges, DoCheck, OnDestr
         } else {
             this._bScrollInternal = false;
         }
-        this._scrollPosition = this._virtScrollTop;
+        this._scrollInstance.updateScroll(this._virtScrollTop);
         const prevStartIndex = this.state.startIndex;
         const scrollOffset = this.fixedUpdateAllElements(this._virtScrollTop);
 
@@ -877,10 +877,10 @@ export class IgxForOfDirective<T> implements OnInit, OnChanges, DoCheck, OnDestr
         if (!parseInt(this.hScroll.children[0].style.width, 10)) {
             return;
         }
-        this._scrollPosition = event.target.scrollLeft;
+        this._scrollInstance.updateScroll(event.target.scrollLeft);
         const prevStartIndex = this.state.startIndex;
         // Updating horizontal chunks
-        const scrollOffset = this.fixedUpdateAllElements(this._scrollPosition);
+        const scrollOffset = this.fixedUpdateAllElements(this.scrollPosition);
         this.dc.instance._viewContainer.element.nativeElement.style.left = -scrollOffset + 'px';
 
         this.dc.changeDetectorRef.detectChanges();
@@ -1518,7 +1518,7 @@ export class IgxGridForOfDirective<T> extends IgxForOfDirective<T> implements On
         } else {
             this._bScrollInternal = false;
         }
-        this._scrollPosition = this._virtScrollTop;
+        this._scrollInstance.updateScroll(this._virtScrollTop);
         const scrollOffset = this.fixedUpdateAllElements(this._virtScrollTop);
 
         this.dc.instance._viewContainer.element.nativeElement.style.top = -(scrollOffset) + 'px';
@@ -1532,7 +1532,7 @@ export class IgxGridForOfDirective<T> extends IgxForOfDirective<T> implements On
         if (!this.hScroll || !parseInt(this.hScroll.children[0].style.width, 10)) {
             return;
         }
-        this._scrollPosition = scrollAmount;
+        this._scrollInstance.updateScroll(scrollAmount);
         // Updating horizontal chunks
         const scrollOffset = this.fixedUpdateAllElements(scrollAmount);
         this.dc.instance._viewContainer.element.nativeElement.style.left = -scrollOffset + 'px';

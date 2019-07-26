@@ -23,7 +23,7 @@ export class HVirtualHelperComponent {
      */
     public get scrollPosition(): number {
         if (this._scrollPosition === null) {
-            this._scrollPosition = this._vcr.element.nativeElement.scrollLeft;
+            this._scrollPosition = this.elementRef.nativeElement.scrollLeft;
         }
         return this._scrollPosition;
     }
@@ -33,7 +33,11 @@ export class HVirtualHelperComponent {
      */
     public set scrollPosition(val: number) {
         this._scrollPosition = val;
-        this._vcr.element.nativeElement.scrollLeft = val;
+        this.elementRef.nativeElement.scrollLeft = val;
+    }
+
+    public updateScroll(val: number) {
+        this._scrollPosition = val;
     }
 
 }

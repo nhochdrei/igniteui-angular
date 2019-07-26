@@ -365,7 +365,7 @@ export class IgxDropDownComponent extends IgxDropDownBase implements IDropDownBa
             this.scrollToItem(this.selectedItem);
         }
         if (this.virtDir) {
-            this.virtDir.getVerticalScroll().scrollTop = this._scrollPosition;
+            this.virtDir.scrollPosition = this._scrollPosition;
         }
     }
 
@@ -388,7 +388,7 @@ export class IgxDropDownComponent extends IgxDropDownBase implements IDropDownBa
     public onToggleClosing(e: CancelableBrowserEventArgs) {
         this.onClosing.emit(e);
         if (this.virtDir) {
-            this._scrollPosition = this.virtDir.getVerticalScroll().scrollTop;
+            this._scrollPosition = this.virtDir.scrollPosition;
         }
     }
 
