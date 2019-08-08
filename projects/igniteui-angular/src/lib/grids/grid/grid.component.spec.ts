@@ -23,7 +23,7 @@ import {
     IgxRowEditTabStopDirective
 } from '../grid.rowEdit.directive';
 import { IgxStringFilteringOperand, IgxNumberFilteringOperand } from '../../data-operations/filtering-condition';
-import { SortingDirection } from '../../data-operations/sorting-expression.interface';
+import { SortingDirection, ISortingExpression } from '../../data-operations/sorting-expression.interface';
 import { IgxGridCellComponent } from '../cell.component';
 import { TransactionType, Transaction, IgxTransactionService } from '../../services';
 import { configureTestSuite } from '../../test-utils/configure-suite';
@@ -3924,6 +3924,49 @@ describe('IgxGrid Component Tests', () => {
             expect(parseInt(window.getComputedStyle(grid.nativeElement).height, 10)).toBe(300);
         });
     });
+
+    fdescribe('IgxGrid - Performance tests', () => {
+        const MAX_RAW_RENDER = 1800;
+        const MAX_GROUPED_RENDER = 1500;
+        let observer: MutationObserver;
+
+        configureTestSuite();
+        beforeEach(async(() => {
+            TestBed.configureTestingModule({
+                declarations: [
+                    IgxGridPerformanceComponent
+                ],
+                imports: [
+                    NoopAnimationsModule,
+                    IgxGridModule,
+                    IgxTabsModule
+                ]
+            }).compileComponents();
+        }));
+        afterEach(() => {
+            if (observer) {
+                observer.disconnect();
+            }
+        })
+
+        it('should render the grid in a certain amount of time', async () => {
+            const fix = TestBed.createComponent(IgxGridPerformanceComponent);
+            fix.detectChanges();
+            expect(fix.componentInstance.delta)
+                .toBeLessThan(MAX_RAW_RENDER);
+        });
+
+        it('should render grouped grid in a certain amount of time', async () => {
+            const fix = TestBed.createComponent(IgxGridPerformanceComponent);
+            fix.componentInstance.groupingExpressions.push({
+                fieldName: 'field0',
+                dir: SortingDirection.Asc
+            });
+            fix.detectChanges();
+            expect(fix.componentInstance.delta)
+                .toBeLessThan(MAX_GROUPED_RENDER);
+        });
+    });
 });
 
 @Component({
@@ -4628,5 +4671,55 @@ export class IgxGridInsideIgxTabsComponent {
             data.push(item);
         }
         this.data = data;
+    }
+}
+
+@Component({
+    template: `<igx-grid #grid [width]="'2000px'" [height]="'2000px'" [data]="data"
+        [autoGenerate]="autoGenerate" [displayDensity]="'compact'" [groupingExpressions]="groupingExpressions">
+        <igx-column *ngFor="let column of columns" [field]="column.field" [header]="column.field" [width]="column.width"></igx-column>
+    </igx-grid>`
+})
+export class IgxGridPerformanceComponent implements AfterViewInit, OnInit {
+
+    @ViewChild('grid', { read: IgxGridComponent }) public grid: IgxGridComponent;
+
+    public columns = [];
+    public data = [];
+
+    public startTime;
+    public delta;
+
+    public groupingExpressions: Array<ISortingExpression> = [];
+
+    public get verticalScroll() {
+        return this.grid.verticalScrollContainer.getVerticalScroll();
+    }
+
+    public get horizontalScroll() {
+        return this.grid.parentVirtDir.getHorizontalScroll();
+    }
+
+    public ngOnInit() {
+        const cols = [], d = [];
+        for (let i = 0; i < 30; i++) {
+            cols.push({ field: 'field' + i, width: '100px', hasSummary: false });
+        }
+        for (let i = 0; i < 10000; i++) {
+            const r = {};
+            r['field0'] = i;
+            for (let j = 1; j < 30; j++) {
+                r['field' + j] = j;
+            }
+            d.push(r);
+        }
+        this.columns = cols;
+        this.data = d;
+        this.startTime = new Date().getTime();
+    }
+
+    public ngAfterViewInit() {
+        this.delta = new Date().getTime() - this.startTime;
+        console.log("Rendering took: " + this.delta + "ms;");
     }
 }
