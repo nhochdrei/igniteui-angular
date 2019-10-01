@@ -21,7 +21,7 @@ export class DatePickerSampleComponent {
         weekday: 'short',
         year: 'numeric'
     };
-    // @ViewChild('dp99') public datePicker99: IgxDatePickerComponent;
+    @ViewChild('datepicker1', { read: IgxDatePickerComponent, static: true }) datepicker1: IgxDatePickerComponent;
 
     public date1;
     public date2;
@@ -39,12 +39,23 @@ export class DatePickerSampleComponent {
     @ViewChild('retemplated', { static: true })
     private retemplatedDP;
 
+    @ViewChild('datePicker', { static: true })
+    private dp: IgxDatePickerComponent;
+
     formatter = (_: Date) => {
         return _.toLocaleString('en');
     }
 
     public deselect(datePicker) {
         datePicker.deselectDate();
+    }
+
+    public showHide() {
+        this.datepicker1.hideOutsideDays = !this.datepicker1.hideOutsideDays;
+    }
+
+    public setMonthsViewNumber(args: HTMLInputElement) {
+        this.datepicker1.monthsViewNumber = parseInt(args.value, 10);
     }
 
     constructor() {
@@ -89,5 +100,9 @@ export class DatePickerSampleComponent {
 
     public selectToday(picker: IgxDatePickerComponent) {
         picker.calendar.value = picker.calendar.viewDate = new Date(Date.now());
+    }
+
+    public d() {
+        this.dp.triggerTodaySelection();
     }
 }

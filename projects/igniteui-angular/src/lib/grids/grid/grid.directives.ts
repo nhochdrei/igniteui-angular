@@ -1,5 +1,5 @@
 import { Directive, ElementRef, Renderer2, NgZone, HostBinding, TemplateRef } from '@angular/core';
-import { IgxDropDirective } from '../../directives/dragdrop/dragdrop.directive';
+import { IgxDropDirective } from '../../directives/drag-drop/drag-drop.directive';
 import { IgxColumnMovingDragDirective } from '../grid.common';
 import { IgxColumnComponent } from '../column.component';
 import { IgxGridComponent } from './grid.component';
@@ -15,6 +15,43 @@ export class IgxGroupByRowTemplateDirective {
 
     constructor(public template: TemplateRef<any>) { }
 
+}
+
+/**
+ * @hidden
+ */
+@Directive({
+    selector: '[igxRowExpandedIndicator]'
+})
+export class IgxRowExpandedIndicatorDirective {
+}
+
+/**
+ * @hidden
+ */
+@Directive({
+    selector: '[igxRowCollapsedIndicator]'
+})
+export class IgxRowCollapsedIndicatorDirective {
+}
+
+
+/**
+ * @hidden
+ */
+@Directive({
+    selector: '[igxHeaderExpandedIndicator]'
+})
+export class IgxHeaderExpandIndicatorDirective {
+}
+
+/**
+ * @hidden
+ */
+@Directive({
+    selector: '[igxHeaderCollapsedIndicator]'
+})
+export class IgxHeaderCollapseIndicatorDirective {
 }
 
 /**

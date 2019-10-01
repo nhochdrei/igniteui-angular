@@ -14,7 +14,6 @@ import {
     Output,
     Renderer,
     SimpleChange,
-    TemplateRef,
     ViewChild
 } from '@angular/core';
 import { fromEvent, interval, Subscription } from 'rxjs';
@@ -61,7 +60,7 @@ export class IgxNavigationDrawerComponent implements
     AfterContentInit,
     OnDestroy,
     OnChanges {
-
+    private _isOpen = false;
     @HostBinding('class') public cssClass = 'igx-nav-drawer';
 
     /**
@@ -123,8 +122,26 @@ export class IgxNavigationDrawerComponent implements
      * <!--set-->
      * <igx-nav-drawer [isOpen]='false'></igx-nav-drawer>
      * ```
+     *
+     * Two-way data binding.
+     * ```html
+     * <!--set-->
+     * <igx-nav-drawer [(isOpen)]='model.isOpen'></igx-nav-drawer>
+     * ```
      */
-    @Input() public isOpen = false;
+    @Input()
+    public get isOpen() {
+        return this._isOpen;
+    }
+    public set isOpen(value) {
+        this._isOpen = value;
+        this.isOpenChange.emit(this._isOpen);
+    }
+
+    /**
+     *@hidden
+     */
+    @Output() public isOpenChange = new EventEmitter<boolean>();
 
     /**
      * When pinned the drawer is relatively positioned instead of sitting above content.
@@ -183,7 +200,7 @@ export class IgxNavigationDrawerComponent implements
     @Input() public width = '280px';
 
     /**
-     * Width of the drawer in its mini state. Defaults to 60px.
+     * Width of the drawer in its mini state. Defaults to 68px.
      *
      * ```typescript
      * // get
@@ -195,7 +212,7 @@ export class IgxNavigationDrawerComponent implements
      * <igx-nav-drawer [miniWidth]="'34px'"></igx-nav-drawer>
      * ```
      */
-    @Input() public miniWidth = '60px';
+    @Input() public miniWidth = '68px';
 
     /**
      * Pinned state change output for two-way binding.

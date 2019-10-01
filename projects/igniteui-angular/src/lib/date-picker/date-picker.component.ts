@@ -32,6 +32,7 @@ import { IgxInputGroupModule, IgxInputDirective, IgxInputGroupComponent } from '
 import { Subject, fromEvent, animationFrameScheduler, interval } from 'rxjs';
 import { filter, takeUntil, throttle } from 'rxjs/operators';
 import { IgxOverlayOutletDirective } from '../directives/toggle/toggle.directive';
+import { IgxTextSelectionModule} from '../directives/text-selection/text-selection.directive';
 import {
     OverlaySettings,
     IgxOverlayService,
@@ -51,7 +52,7 @@ import {
 } from './date-picker.utils';
 import { DatePickerDisplayValuePipe, DatePickerInputValuePipe } from './date-picker.pipes';
 import { IDatePicker } from './date-picker.common';
-import { KEYS, CancelableBrowserEventArgs, isIE } from '../core/utils';
+import { KEYS, CancelableBrowserEventArgs, isIE, isEqual, IBaseEventArgs } from '../core/utils';
 import { IgxDatePickerTemplateDirective, IgxDatePickerActionsDirective } from './date-picker.directives';
 import { IgxCalendarContainerComponent } from './calendar-container.component';
 import { InteractionMode } from '../core/enums';
@@ -64,7 +65,7 @@ let NEXT_ID = 0;
  * This interface is used to provide information about date picker reference and its current value
  * when onDisabledDate event is fired.
  */
-export interface IDatePickerDisabledDateEventArgs {
+export interface IDatePickerDisabledDateEventArgs extends IBaseEventArgs {
     datePicker: IgxDatePickerComponent;
     currentValue: Date;
 }
@@ -73,7 +74,7 @@ export interface IDatePickerDisabledDateEventArgs {
  * This interface is used to provide information about date picker reference and its previously valid value
  * when onValidationFailed event is fired.
  */
-export interface IDatePickerValidationFailedEventArgs {
+export interface IDatePickerValidationFailedEventArgs extends IBaseEventArgs {
     datePicker: IgxDatePickerComponent;
     prevValue: Date;
 }
@@ -188,6 +189,32 @@ export class IgxDatePickerComponent implements IDatePicker, ControlValueAccessor
     public get formatOptions(): IFormatOptions {
         return this._formatOptions;
     }
+
+    /**
+     * Sets/gets whether the inactive dates (dates that are out of the current month) will be hidden.
+     * Default value is `false`.
+     * ```html
+     * <igx-date-picker [hideOutsideDays]="true"></igx-date-picker>
+     * ```
+     * ```typescript
+     * let hideOutsideDays = this.datePicker.hideOutsideDays;
+     * ```
+     */
+    @Input()
+    public hideOutsideDays: boolean;
+
+    /**
+     * Sets/gets the number of month views displayed.
+     * Default value is `1`.
+     * ```html
+     * <igx-date-picker [monthsViewNumber]="2"></igx-date-picker>
+     * ```
+     * ```typescript
+     * let monthViewsDisplayed = this.datePicker.monthsViewNumber;
+     * ```
+     */
+    @Input()
+    public monthsViewNumber = 1;
 
     /**
      *Sets the format options of the `IgxDatePickerComponent`.
@@ -607,7 +634,7 @@ export class IgxDatePickerComponent implements IDatePicker, ControlValueAccessor
      * An event that is emitted when the `IgxDatePickerComponent` is being closed.
      */
     @Output()
-    public onClosing = new EventEmitter<CancelableBrowserEventArgs>();
+    public onClosing = new EventEmitter<CancelableBrowserEventArgs & IBaseEventArgs>();
 
     /**
      *An @Output property that is fired when selection is made in the calendar.
@@ -622,6 +649,20 @@ export class IgxDatePickerComponent implements IDatePicker, ControlValueAccessor
      */
     @Output()
     public onSelection = new EventEmitter<Date>();
+
+    /**
+     *An @Output property that is fired when date picker value is changed.
+     *```typescript
+     *public valueChanged(event){
+        *    alert("Date picker value is changed");
+        *}
+        *```
+        *```html
+        *<igx-date-picker (valueChange)="valueChanged($event)" mode="dropdown"></igx-date-picker>
+        *```
+    */
+    @Output()
+    public valueChange = new EventEmitter<Date>();
 
     /**
     *An @Output property that fires when the user types/spins to a disabled date in the date-picker editor.
@@ -690,19 +731,19 @@ export class IgxDatePickerComponent implements IDatePicker, ControlValueAccessor
     /**
      *@hidden
      */
-    @ContentChild(IgxDatePickerTemplateDirective, { read: IgxDatePickerTemplateDirective, static: true })
+    @ContentChild(IgxDatePickerTemplateDirective, { read: IgxDatePickerTemplateDirective, static: false })
     protected datePickerTemplateDirective: IgxDatePickerTemplateDirective;
 
     /**
      *@hidden
      */
-    @ContentChild(IgxCalendarHeaderTemplateDirective, { read: IgxCalendarHeaderTemplateDirective, static: true })
+    @ContentChild(IgxCalendarHeaderTemplateDirective, { read: IgxCalendarHeaderTemplateDirective, static: false })
     public headerTemplate: IgxCalendarHeaderTemplateDirective;
 
     /**
      *@hidden
      */
-    @ContentChild(IgxCalendarSubheaderTemplateDirective, { read: IgxCalendarSubheaderTemplateDirective, static: true })
+    @ContentChild(IgxCalendarSubheaderTemplateDirective, { read: IgxCalendarSubheaderTemplateDirective, static: false })
     public subheaderTemplate: IgxCalendarSubheaderTemplateDirective;
 
     /**
@@ -907,7 +948,10 @@ export class IgxDatePickerComponent implements IDatePicker, ControlValueAccessor
      * @memberOf {@link IgxDatePickerComponent}
      */
     public selectDate(date: Date): void {
+        const oldValue =  this.value;
         this.value = date;
+
+        this.emitValueChangeEvent(oldValue, this.value );
         this.onSelection.emit(date);
         this._onChangeCallback(date);
     }
@@ -924,7 +968,9 @@ export class IgxDatePickerComponent implements IDatePicker, ControlValueAccessor
      * @memberOf {@link IgxDatePickerComponent}
      */
     public deselectDate(): void {
+        const oldValue =  this.value;
         this.value = null;
+        this.emitValueChangeEvent(oldValue, this.value );
         if (this.calendar) {
             this.calendar.deselectDate();
         }
@@ -1009,8 +1055,10 @@ export class IgxDatePickerComponent implements IDatePicker, ControlValueAccessor
             date.setSeconds(this.value.getSeconds());
             date.setMilliseconds(this.value.getMilliseconds());
         }
-
+        const oldValue =  this.value;
         this.value = date;
+
+        this.emitValueChangeEvent(oldValue, this.value );
         this.calendar.viewDate = date;
         this._onChangeCallback(date);
         this.closeCalendar();
@@ -1128,6 +1176,12 @@ export class IgxDatePickerComponent implements IDatePicker, ControlValueAccessor
         }
     }
 
+    private emitValueChangeEvent(oldValue: Date, newValue: Date) {
+        if (!isEqual(oldValue, newValue)) {
+            this.valueChange.emit(newValue);
+        }
+    }
+
     private calculateDate(dateString: string, invokedByEvent: string): void {
         if (dateString !== '') {
             const prevDateValue = this.value;
@@ -1146,9 +1200,12 @@ export class IgxDatePickerComponent implements IDatePicker, ControlValueAccessor
 
                 if (this.disabledDates === null
                     || (this.disabledDates !== null && !isDateInRanges(newValue, this.disabledDates))) {
-                    this.value = newValue;
-                    this.invalidDate = '';
-                    this._onChangeCallback(newValue);
+                        const oldValue =  this.value;
+                        this.value = newValue;
+
+                        this.emitValueChangeEvent(oldValue, this.value );
+                        this.invalidDate = '';
+                        this._onChangeCallback(newValue);
                 } else {
                     const args: IDatePickerDisabledDateEventArgs = {
                         datePicker: this,
@@ -1229,6 +1286,8 @@ export class IgxDatePickerComponent implements IDatePicker, ControlValueAccessor
         this.calendar.disabledDates = this.disabledDates;
         this.calendar.headerTemplate = this.headerTemplate;
         this.calendar.subheaderTemplate = this.subheaderTemplate;
+        this.calendar.hideOutsideDays = this.hideOutsideDays;
+        this.calendar.monthsViewNumber = this.monthsViewNumber;
         this.calendar.onSelection.pipe(takeUntil(this._destroy$)).subscribe((ev: Date) => this.handleSelection(ev));
 
         if (this.value) {
@@ -1321,7 +1380,8 @@ export class IgxDatePickerComponent implements IDatePicker, ControlValueAccessor
         IgxDatePickerTemplateDirective, DatePickerDisplayValuePipe, DatePickerInputValuePipe],
     exports: [IgxDatePickerComponent, IgxDatePickerTemplateDirective, IgxDatePickerActionsDirective,
         DatePickerDisplayValuePipe, DatePickerInputValuePipe],
-    imports: [CommonModule, IgxIconModule, IgxInputGroupModule, IgxCalendarModule, IgxButtonModule, IgxRippleModule, IgxMaskModule],
+    imports: [CommonModule, IgxIconModule, IgxInputGroupModule, IgxCalendarModule, IgxButtonModule,
+                IgxRippleModule, IgxMaskModule, IgxTextSelectionModule],
     entryComponents: [IgxCalendarContainerComponent]
 })
 export class IgxDatePickerModule { }

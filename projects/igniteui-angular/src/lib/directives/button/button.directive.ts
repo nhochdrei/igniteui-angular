@@ -17,31 +17,46 @@ import { DisplayDensityBase, DisplayDensityToken, IDisplayDensityOptions, Displa
     selector: '[igxButton]'
 })
 export class IgxButtonDirective extends DisplayDensityBase {
+
     /**
      *@hidden
      */
-    private _type = 'flat';
+    private _type: string;
+
     /**
      *@hidden
      */
-    private _cssClass = 'igx-button';
+    private _defaultType = 'flat';
+
+    /**
+     *@hidden
+     */
+    private _cssClassPrefix = 'igx-button';
+
     /**
      *@hidden
      */
     private _color: string;
+
     /**
      *@hidden
      */
     private _label: string;
+
     /**
      *@hidden
      */
     private _backgroundColor: string;
 
+    /**
+     *@hidden
+     */
+    private _disabled: boolean;
+
     constructor(public element: ElementRef, private _renderer: Renderer2,
         @Optional() @Inject(DisplayDensityToken) protected _displayDensityOptions: IDisplayDensityOptions) {
-            super(_displayDensityOptions);
-        }
+        super(_displayDensityOptions);
+    }
 
     /**
      * Returns the underlying DOM element
@@ -66,7 +81,9 @@ export class IgxButtonDirective extends DisplayDensityBase {
      * ```
      * @memberof IgxButtonDirective
      */
-    @HostBinding('attr.role') public role = 'button';
+    @HostBinding('attr.role')
+    public role = 'button';
+
     /**
      * Sets the type of the button.
      * ```html
@@ -74,10 +91,16 @@ export class IgxButtonDirective extends DisplayDensityBase {
      * ```
      * @memberof IgxButtonDirective
      */
-    @Input('igxButton') set type(value: string) {
-        this._type = value || this._type;
-        this._renderer.addClass(this.nativeElement, `${this._cssClass}--${this._type}`);
+    @Input('igxButton')
+    set type(value: string) {
+        const newValue = value ? value : this._defaultType;
+        if (this._type !== newValue) {
+            this._renderer.removeClass(this.nativeElement, `${this._cssClassPrefix}--${this._type}`);
+            this._type = newValue;
+            this._renderer.addClass(this.nativeElement, `${this._cssClassPrefix}--${this._type}`);
+        }
     }
+
     /**
      * Sets the button text color.
      * ```html
@@ -89,6 +112,7 @@ export class IgxButtonDirective extends DisplayDensityBase {
         this._color = value || this.nativeElement.style.color;
         this._renderer.setStyle(this.nativeElement, 'color', this._color);
     }
+
     /**
      * Sets the background color of the button.
      * ```html
@@ -100,6 +124,7 @@ export class IgxButtonDirective extends DisplayDensityBase {
         this._backgroundColor = value || this._backgroundColor;
         this._renderer.setStyle(this.nativeElement, 'background', this._backgroundColor);
     }
+
     /**
      * Sets the `aria-label` attribute.
      * ```html
@@ -111,6 +136,7 @@ export class IgxButtonDirective extends DisplayDensityBase {
         this._label = value || this._label;
         this._renderer.setAttribute(this.nativeElement, `aria-label`, this._label);
     }
+
     /**
      * Enables/disables the button.
      *  ```html
@@ -120,10 +146,11 @@ export class IgxButtonDirective extends DisplayDensityBase {
      */
     @Input() set disabled(val) {
         val = !!val;
+        this._disabled = val;
         if (val) {
-            this._renderer.addClass(this.nativeElement, `${this._cssClass}--disabled`);
+            this._renderer.addClass(this.nativeElement, `${this._cssClassPrefix}--disabled`);
         } else {
-            this._renderer.removeClass(this.nativeElement, `${this._cssClass}--disabled`);
+            this._renderer.removeClass(this.nativeElement, `${this._cssClassPrefix}--disabled`);
         }
     }
 
@@ -162,6 +189,14 @@ export class IgxButtonDirective extends DisplayDensityBase {
     }
 
     /**
+     * @hidden
+     */
+    @HostBinding('attr.disabled')
+    public get disabledAttribute() {
+        return this._disabled ? this._disabled : null;
+    }
+
+    /**
      * Gets or sets whether the button is selected.
      * Mainly used in the IgxButtonGroup component and it will have no effect if set separately.
      * ```html
@@ -174,7 +209,7 @@ export class IgxButtonDirective extends DisplayDensityBase {
     /**
      *@hidden
      */
-    @HostListener('click',  ['$event'])
+    @HostListener('click', ['$event'])
     public onClick(ev) {
         this.buttonClick.emit(ev);
     }

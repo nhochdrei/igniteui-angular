@@ -9,19 +9,14 @@ import {
     QueryList,
     TemplateRef,
     forwardRef,
-    AfterViewInit
+    Output,
+    EventEmitter
 } from '@angular/core';
 import { DataType } from '../data-operations/data-util';
 import { GridBaseAPIService } from './api.service';
 import { IgxGridCellComponent } from './cell.component';
 import { IgxDateSummaryOperand, IgxNumberSummaryOperand, IgxSummaryOperand } from './summaries/grid-summary';
 import { IgxRowComponent } from './row.component';
-import {
-    IgxCellEditorTemplateDirective,
-    IgxCellHeaderTemplateDirective,
-    IgxCellTemplateDirective,
-    IgxFilterCellTemplateDirective
-} from './grid.common';
 import { IgxGridHeaderComponent } from './grid-header.component';
 import { DefaultSortingStrategy, ISortingStrategy } from '../data-operations/sorting-strategy';
 import { getNodeSizeViaRange, flatten } from '../core/utils';
@@ -39,6 +34,13 @@ import { IgxGridHeaderGroupComponent } from './grid-header-group.component';
 import { DeprecateProperty } from '../core/deprecateDecorators';
 import { MRLColumnSizeInfo, MRLResizeColumnInfo } from '../data-operations/multi-row-layout.interfaces';
 import { DisplayDensity } from '../core/displayDensity';
+import { notifyChanges } from './watch-changes';
+import {
+    IgxCellTemplateDirective,
+    IgxCellHeaderTemplateDirective,
+    IgxCellEditorTemplateDirective,
+    IgxFilterCellTemplateDirective
+} from './common/templates';
 
 /**
  * **Ignite UI for Angular Column** -
@@ -55,8 +57,6 @@ import { DisplayDensity } from '../core/displayDensity';
     template: ``
 })
 export class IgxColumnComponent implements AfterContentInit {
-    private _filterable = true;
-    private _groupable = false;
     /**
      * Sets/gets the `field` value.
      * ```typescript
@@ -80,6 +80,7 @@ export class IgxColumnComponent implements AfterContentInit {
      *
      * @memberof IgxColumnComponent
      */
+    @notifyChanges()
     @Input()
     public header = '';
     /**
@@ -106,16 +107,9 @@ export class IgxColumnComponent implements AfterContentInit {
      * ```
      * @memberof IgxColumnComponent
      */
+    @notifyChanges(true)
     @Input()
-    public get groupable() {
-        return this._groupable;
-    }
-    public set groupable(val) {
-        this._groupable = val;
-        if (this.grid) {
-            this.grid.cdr.markForCheck();
-        }
-    }
+    groupable = false;
     /**
      * Gets whether the column is editable.
      * Default value is `false`.
@@ -165,16 +159,9 @@ export class IgxColumnComponent implements AfterContentInit {
      * ```
      * @memberof IgxColumnComponent
      */
+    @notifyChanges()
     @Input()
-    public get filterable() {
-        return this._filterable;
-    }
-    public set filterable(val) {
-        this._filterable = val;
-        if (this.grid) {
-            this.grid.cdr.markForCheck();
-        }
-    }
+    public filterable = true;
     /**
      * Sets/gets whether the column is resizable.
      * Default value is `false`.
@@ -195,6 +182,7 @@ export class IgxColumnComponent implements AfterContentInit {
      * ```
      * @memberof IgxColumnComponent
      */
+    @notifyChanges(true)
     @Input()
     get hasSummary() {
         return this._hasSummary;
@@ -211,7 +199,7 @@ export class IgxColumnComponent implements AfterContentInit {
         this._hasSummary = value;
 
         if (this.grid) {
-            this.grid.summaryService.recalculateSummaries();
+            this.grid.summaryService.resetSummaryHeight();
         }
     }
     /**
@@ -221,6 +209,7 @@ export class IgxColumnComponent implements AfterContentInit {
      * ```
      *@memberof IgxColumnComponent
      */
+    @notifyChanges(true)
     @Input()
     get hidden(): boolean {
         return this._hidden;
@@ -228,32 +217,39 @@ export class IgxColumnComponent implements AfterContentInit {
     /**
      * Sets the column hidden property.
      * Default value is `false`.
-     * ```typescript
+     * ```html
      * <igx-column [hidden] = "true"></igx-column>
+     * ```
+     *
+     * Two-way data binding.
+     * ```html
+     * <igx-column [(hidden)] = "model.isHidden"></igx-column>
      * ```
      * @memberof IgxColumnComponent
      */
     set hidden(value: boolean) {
         if (this._hidden !== value) {
             this._hidden = value;
-            if (this.grid) {
-                this.grid.resetCaches();
-                this.grid.endEdit(false);
-            }
-            // TODO: Simplify
-            this.check();
-            if (this.grid) {
-                this.grid.refreshSearch(true);
-                this.grid.summaryService.resetSummaryHeight();
-                this.grid.reflow();
-                this.grid.filteringService.refreshExpressions();
-            }
-
+            this.hiddenChange.emit(this._hidden);
             if (this.columnLayoutChild && this.parent.hidden !== value) {
                 this.parent.hidden = value;
+                return;
+            }
+            if (this.grid) {
+                this.grid.endEdit(false);
+                this.grid.summaryService.resetSummaryHeight();
+                this.grid.filteringService.refreshExpressions();
+                this.grid.notifyChanges();
+                // this.grid.refreshSearch(true);
             }
         }
     }
+
+    /**
+     *@hidden
+     */
+    @Output()
+    public hiddenChange = new EventEmitter<boolean>();
     /**
      * Gets whether the hiding is disabled.
      * ```typescript
@@ -261,24 +257,9 @@ export class IgxColumnComponent implements AfterContentInit {
      * ```
      * @memberof IgxColumnComponent
      */
+    @notifyChanges()
     @Input()
-    get disableHiding(): boolean {
-        return this._disableHiding;
-    }
-    /**
-     * Enables/disables hiding for the column.
-     * Default value is `false`.
-     * ```typescript
-     * <igx-column [hidden] = "true"></igx-column>
-     * ```
-     * @memberof IgxColumnComponent
-     */
-    set disableHiding(value: boolean) {
-        if (this._disableHiding !== value) {
-            this._disableHiding = value;
-            this.check();
-        }
-    }
+    disableHiding = false;
     /**
      * Gets whether the pinning is disabled.
      * ```typescript
@@ -286,24 +267,9 @@ export class IgxColumnComponent implements AfterContentInit {
      * ```
      * @memberof IgxColumnComponent
      */
+    @notifyChanges()
     @Input()
-    get disablePinning(): boolean {
-        return this._disablePinning;
-    }
-    /**
-     * Enables/disables pinning for the column.
-     * Default value is `false`.
-     * ```typescript
-     * <igx-column [pinned] = "true"></igx-column>
-     * ```
-     * @memberof IgxColumnComponent
-     */
-    set disablePinning(value: boolean) {
-        if (this._disablePinning !== value) {
-            this._disablePinning = value;
-            this.check();
-        }
-    }
+    disablePinning = false;
     /**
      * Sets/gets whether the column is movable.
      * Default value is `false`.
@@ -315,6 +281,7 @@ export class IgxColumnComponent implements AfterContentInit {
      * ```
      * @memberof IgxColumnComponent
      */
+    @notifyChanges()
     @Input()
     public movable = false;
     /**
@@ -324,6 +291,7 @@ export class IgxColumnComponent implements AfterContentInit {
      * ```
      * @memberof IgxColumnComponent
      */
+    @notifyChanges(true)
     @Input()
     public get width(): string {
         return this.widthSetByUser ? this._width : this.defaultWidth;
@@ -332,6 +300,11 @@ export class IgxColumnComponent implements AfterContentInit {
      * Sets the `width` of the column.
      * ```html
      * <igx-column [width] = "'25%'"></igx-column>
+     * ```
+     *
+     * Two-way data binding.
+     * ```html
+     * <igx-column [(width)]="model.columns[0].width"></igx-column>
      * ```
      * @memberof IgxColumnComponent
      */
@@ -343,11 +316,16 @@ export class IgxColumnComponent implements AfterContentInit {
             this._width = value;
             if (this.grid) {
                 this.cacheCalcWidth();
-                (this.grid as any)._derivePossibleWidth();
-                this.grid.cdr.markForCheck();
             }
+            this.widthChange.emit(this._width);
         }
     }
+
+    /**
+     *@hidden
+     */
+    @Output()
+    public widthChange = new EventEmitter<string>();
 
     /**
      * @hidden
@@ -382,6 +360,7 @@ export class IgxColumnComponent implements AfterContentInit {
      * ```
      * @memberof IgxColumnComponent
      */
+    @notifyChanges()
     @Input()
     public set minWidth(value: string) {
         const minVal = parseFloat(value);
@@ -402,6 +381,7 @@ export class IgxColumnComponent implements AfterContentInit {
      * ```
      * @memberof IgxColumnComponent
      */
+    @notifyChanges()
     @Input()
     public headerClasses = '';
 
@@ -415,6 +395,7 @@ export class IgxColumnComponent implements AfterContentInit {
      * ```
      * @memberof IgxColumnComponent
      */
+    @notifyChanges()
     @Input()
     public headerGroupClasses = '';
     /**
@@ -433,6 +414,7 @@ export class IgxColumnComponent implements AfterContentInit {
      * ```
      * @memberof IgxColumnComponent
      */
+    @notifyChanges()
     @Input()
     public cellClasses: any;
     /**
@@ -465,6 +447,7 @@ export class IgxColumnComponent implements AfterContentInit {
      * ```
      * @memberof IgxColumnComponent
      */
+    @notifyChanges()
     @Input()
     formatter: (value: any) => any;
     /**
@@ -523,6 +506,11 @@ export class IgxColumnComponent implements AfterContentInit {
      * ```html
      * <igx-column [pinned] = "true"></igx-column>
      * ```
+     *
+     * Two-way data binding.
+     * ```html
+     * <igx-column [(pinned)] = "model.columns[0].isPinned"></igx-column>
+     * ```
      * @memberof IgxColumnComponent
      */
     public set pinned(value: boolean) {
@@ -535,8 +523,16 @@ export class IgxColumnComponent implements AfterContentInit {
                will re-init the group (if present)
             */
             this._pinned = value;
+            this.pinnedChange.emit(this._pinned);
         }
     }
+
+    /**
+     *@hidden
+     */
+    @Output()
+    public pinnedChange = new EventEmitter<boolean>();
+
     /**
      * @deprecated
      * Gets/Sets the `id` of the `igx-grid`.
@@ -557,6 +553,7 @@ export class IgxColumnComponent implements AfterContentInit {
      * ```
      * @memberof IgxColumnComponent
      */
+    @notifyChanges(true)
     @Input()
     public get summaries(): any {
         return this._summaries;
@@ -574,7 +571,7 @@ export class IgxColumnComponent implements AfterContentInit {
         if (this.grid) {
             this.grid.summaryService.removeSummariesCachePerColumn(this.field);
             (this.grid as any)._summaryPipeTrigger++;
-            this.grid.summaryService.recalculateSummaries();
+            this.grid.summaryService.resetSummaryHeight();
         }
     }
     /**
@@ -588,6 +585,7 @@ export class IgxColumnComponent implements AfterContentInit {
      * ```
      * @memberof IgxColumnComponent
      */
+    @notifyChanges()
     @Input()
     public searchable = true;
     /**
@@ -683,7 +681,9 @@ export class IgxColumnComponent implements AfterContentInit {
      * ```
      * @memberof IgxColumnComponent
      */
-    public grid: IgxGridBaseComponent;
+    public get grid(): IgxGridBaseComponent {
+        return this.gridAPI.grid;
+    }
     /**
      * Returns a reference to the `bodyTemplate`.
      * ```typescript
@@ -691,6 +691,7 @@ export class IgxColumnComponent implements AfterContentInit {
      * ```
      * @memberof IgxColumnComponent
      */
+    @notifyChanges()
     @Input('cellTemplate')
     get bodyTemplate(): TemplateRef<any> {
         return this._bodyTemplate;
@@ -713,9 +714,6 @@ export class IgxColumnComponent implements AfterContentInit {
      */
     set bodyTemplate(template: TemplateRef<any>) {
         this._bodyTemplate = template;
-        if (this.grid) {
-            this.grid.cdr.markForCheck();
-        }
     }
     /**
      * Returns a reference to the header template.
@@ -724,6 +722,7 @@ export class IgxColumnComponent implements AfterContentInit {
      * ```
      * @memberof IgxColumnComponent
      */
+    @notifyChanges()
     @Input()
     get headerTemplate(): TemplateRef<any> {
         return this._headerTemplate;
@@ -747,9 +746,6 @@ export class IgxColumnComponent implements AfterContentInit {
      */
     set headerTemplate(template: TemplateRef<any>) {
         this._headerTemplate = template;
-        if (this.grid) {
-            this.grid.cdr.markForCheck();
-        }
     }
     /**
      * Returns a reference to the inline editor template.
@@ -758,6 +754,7 @@ export class IgxColumnComponent implements AfterContentInit {
      * ```
      * @memberof IgxColumnComponent
      */
+    @notifyChanges()
     @Input('cellEditorTemplate')
     get inlineEditorTemplate(): TemplateRef<any> {
         return this._inlineEditorTemplate;
@@ -778,9 +775,6 @@ export class IgxColumnComponent implements AfterContentInit {
      */
     set inlineEditorTemplate(template: TemplateRef<any>) {
         this._inlineEditorTemplate = template;
-        if (this.grid) {
-            this.grid.cdr.markForCheck();
-        }
     }
     /**
      * Returns a reference to the `filterCellTemplate`.
@@ -789,6 +783,7 @@ export class IgxColumnComponent implements AfterContentInit {
      * ```
      * @memberof IgxColumnComponent
      */
+    @notifyChanges()
     @Input('filterCellTemplate')
     get filterCellTemplate(): TemplateRef<any> {
         return this._filterCellTemplate;
@@ -1071,10 +1066,6 @@ export class IgxColumnComponent implements AfterContentInit {
     /**
      *@hidden
      */
-    protected _disableHiding = false;
-    /**
-     *@hidden
-     */
     protected _disablePinning = false;
     /**
      *@hidden
@@ -1101,7 +1092,7 @@ export class IgxColumnComponent implements AfterContentInit {
     /**
      *@hidden
      */
-    @ContentChild(IgxCellTemplateDirective, { read: IgxCellTemplateDirective, static: true })
+    @ContentChild(IgxCellTemplateDirective, { read: IgxCellTemplateDirective, static: false })
     protected cellTemplate: IgxCellTemplateDirective;
     /**
      *@hidden
@@ -1111,14 +1102,14 @@ export class IgxColumnComponent implements AfterContentInit {
     /**
      *@hidden
      */
-    @ContentChild(IgxCellEditorTemplateDirective, { read: IgxCellEditorTemplateDirective, static: true })
+    @ContentChild(IgxCellEditorTemplateDirective, { read: IgxCellEditorTemplateDirective, static: false })
     protected editorTemplate: IgxCellEditorTemplateDirective;
 
     protected _vIndex = NaN;
     /**
      *@hidden
      */
-    @ContentChild(IgxFilterCellTemplateDirective, { read: IgxFilterCellTemplateDirective, static: true })
+    @ContentChild(IgxFilterCellTemplateDirective, { read: IgxFilterCellTemplateDirective, static: false })
     public filterCellTemplateDirective: IgxFilterCellTemplateDirective;
 
     constructor(public gridAPI: GridBaseAPIService<IgxGridBaseComponent & IGridDataBindable>, public cdr: ChangeDetectorRef) { }
@@ -1391,13 +1382,12 @@ export class IgxColumnComponent implements AfterContentInit {
             return false;
         }
 
-        const width = parseInt(this.width, 10);
-
-        if (!this.parent && (grid.getUnpinnedWidth(true) - width < grid.unpinnedAreaMinWidth)) {
+        if (!this.parent && !this.pinnable) {
             return false;
         }
 
         this._pinned = true;
+        this.pinnedChange.emit(this._pinned);
         this._unpinnedIndex = grid._unpinnedColumns.indexOf(this);
         index = index !== undefined ? index : grid._pinnedColumns.length;
         const targetColumn = grid._pinnedColumns[index];
@@ -1422,12 +1412,12 @@ export class IgxColumnComponent implements AfterContentInit {
         }
 
         grid.resetCaches();
-        grid.cdr.detectChanges();
+        grid.notifyChanges();
         if (this.columnLayoutChild) {
             this.grid.columns.filter(x => x.columnLayout).forEach( x => x.populateVisibleIndexes());
         }
         this.grid.filteringService.refreshExpressions();
-        this.grid.refreshSearch(true);
+        // this.grid.refreshSearch(true);
         return true;
     }
     /**
@@ -1462,6 +1452,7 @@ export class IgxColumnComponent implements AfterContentInit {
         index = (index !== undefined ? index :
             this._unpinnedIndex !== undefined ? this._unpinnedIndex : this.index);
         this._pinned = false;
+        this.pinnedChange.emit(this._pinned);
 
         const targetColumn = grid._unpinnedColumns[index];
 
@@ -1485,12 +1476,12 @@ export class IgxColumnComponent implements AfterContentInit {
         const args = { column: this, insertAtIndex, isPinned: false };
         grid.onColumnPinning.emit(args);
 
-        grid.cdr.detectChanges();
+        grid.notifyChanges();
         if (this.columnLayoutChild) {
             this.grid.columns.filter(x => x.columnLayout).forEach( x => x.populateVisibleIndexes());
         }
         this.grid.filteringService.refreshExpressions();
-        this.grid.refreshSearch(true);
+        // this.grid.refreshSearch(true);
 
         return true;
     }
@@ -1507,14 +1498,6 @@ export class IgxColumnComponent implements AfterContentInit {
             parent = parent.parent;
         }
         return parent;
-    }
-    /**
-     *@hidden
-     */
-    protected check() {
-        if (this.grid) {
-            this.grid.markForCheck();
-        }
     }
 
     /**
@@ -1563,8 +1546,6 @@ export class IgxColumnComponent implements AfterContentInit {
         if (!this.columnGroup) {
 
             this.width = this.getLargestCellWidth();
-
-            this.grid.markForCheck();
             this.grid.reflow();
         }
     }
@@ -1682,6 +1663,15 @@ export class IgxColumnComponent implements AfterContentInit {
             this._calcWidth = this.width;
         }
         this.calcPixelWidth = parseInt(this._calcWidth, 10);
+    }
+
+    /**
+     *@hidden
+    */
+    public get pinnable() {
+        const gridUnpinnedWidth = (this.grid as any).getUnpinnedWidth(true);
+        const elementWidth = this.parent ? parseInt(this.topLevelParent.width, 10) : parseInt(this.width, 10);
+        return (this.grid as any)._init || !((gridUnpinnedWidth - elementWidth) < this.grid.unpinnedAreaMinWidth);
     }
 
     /**
@@ -1805,15 +1795,28 @@ export class IgxColumnGroupComponent extends IgxColumnComponent implements After
     }
     /**
      * Sets the column group hidden property.
-     * ```typescript
+     * ```html
      * <igx-column [hidden] = "true"></igx-column>
+     * ```
+     *
+     * Two-way data binding
+     * ```html
+     * <igx-column [(hidden)] = "model.columns[0].isHidden"></igx-column>
      * ```
      * @memberof IgxColumnGroupComponent
      */
     set hidden(value: boolean) {
         this._hidden = value;
+        this.hiddenChange.emit(this._hidden);
         this.children.forEach(child => child.hidden = value);
     }
+
+    /**
+     *@hidden
+     */
+    @Output()
+    public hiddenChange = new EventEmitter<boolean>();
+
     /**
      *@hidden
      */
@@ -1996,8 +1999,6 @@ export class IgxColumnLayoutComponent extends IgxColumnGroupComponent implements
         }
 
         this.children.forEach(child => {
-            child.disableHiding = true;
-            child.disablePinning = true;
             child.movable = false;
         });
     }

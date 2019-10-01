@@ -3,17 +3,16 @@
     (keydown)="onChipKeyDown($event)"
     [igxDrag]="{chip: this}"
     [hideBaseOnDrag]="hideBaseOnDrag"
-    [animateOnRelease]="animateOnRelease"
-    [ghostImageClass]="ghostClass"
+    [ghostClass]="ghostClass"
     (dragStart)="onChipDragStart($event)"
     (dragEnd)="onChipDragEnd()"
-    (returnMoveEnd)="onChipMoveEnd($event)"
-    (dragClicked)="onChipDragClicked($event)"
+    (transitioned)="onChipMoveEnd($event)"
+    (click)="onChipDragClicked($event)"
     igxDrop
-    (onEnter)="onChipDragEnterHandler($event)"
-    (onDrop)="onChipDrop($event)">
+    (enter)="onChipDragEnterHandler($event)"
+    (dropped)="onChipDrop($event)">
 
-    <div [ngClass]="selectClass(selected)">
+    <div [ngClass]="selectClass(selected)" (transitionend)="onSelectTransitionDone($event)">
         <ng-container *ngTemplateOutlet="selectIconTemplate"></ng-container>
     </div>
 

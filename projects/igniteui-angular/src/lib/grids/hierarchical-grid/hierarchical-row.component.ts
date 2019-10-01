@@ -4,17 +4,14 @@ import {
     HostBinding,
     forwardRef,
     ElementRef,
-    ChangeDetectorRef,
     ViewChildren,
     QueryList,
-    ViewChild
+    ViewChild,
+    TemplateRef
 } from '@angular/core';
 import { IgxHierarchicalGridComponent } from './hierarchical-grid.component';
 import { IgxRowComponent } from '../row.component';
-import { IgxHierarchicalSelectionAPIService } from './selection';
-import { GridBaseAPIService } from '.././api.service';
 import { IgxHierarchicalGridCellComponent } from './hierarchical-cell.component';
-import { IgxGridCRUDService, IgxGridSelectionService } from '../../core/grid-selection';
 
 @Component({
     changeDetection: ChangeDetectionStrategy.OnPush,
@@ -37,6 +34,24 @@ export class IgxHierarchicalRowComponent extends IgxRowComponent<IgxHierarchical
 
     @ViewChild('expander', { read: ElementRef, static: false })
     public expander: ElementRef;
+
+    /**
+    * @hidden
+    */
+   @ViewChild('defaultExpandedTemplate', { read: TemplateRef, static: true })
+   protected defaultExpandedTemplate: TemplateRef<any>;
+
+    /**
+    * @hidden
+    */
+   @ViewChild('defaultEmptyTemplate', { read: TemplateRef, static: true })
+   protected defaultEmptyTemplate: TemplateRef<any>;
+
+    /**
+    * @hidden
+    */
+   @ViewChild('defaultCollapsedTemplate', { read: TemplateRef, static: true })
+   protected defaultCollapsedTemplate: TemplateRef<any>;
 
     /**
      * @hidden
@@ -73,11 +88,12 @@ export class IgxHierarchicalRowComponent extends IgxRowComponent<IgxHierarchical
      * this.grid1.rowList.first.toggle()
      * ```
      */
-    public toggle() {
+    public toggle(event?) {
         if (this.added) {
             return;
         }
         const grid = this.gridAPI.grid;
+        this.endEdit(grid.rootGrid);
         const state = this.gridAPI.grid.hierarchicalState;
         if (!this.expanded) {
             state.push({ rowID: this.rowID });
@@ -88,17 +104,49 @@ export class IgxHierarchicalRowComponent extends IgxRowComponent<IgxHierarchical
             });
         }
         grid.cdr.detectChanges();
-        requestAnimationFrame(() => {
-            grid.reflow();
-        });
     }
 
-    constructor(public gridAPI: GridBaseAPIService<IgxHierarchicalGridComponent>,
-        public crudService: IgxGridCRUDService,
-        public selectionService: IgxGridSelectionService,
-        private hselection: IgxHierarchicalSelectionAPIService,
-        public element: ElementRef,
-        public cdr: ChangeDetectorRef) {
-            super(gridAPI, crudService, selectionService, hselection, element, cdr);
+    /**
+     * @hidden
+     * @internal
+     */
+    public select = () => {
+        this.grid.selectRows([this.rowID]);
+    }
+
+    /**
+     * @hidden
+     * @internal
+     */
+    public deselect = () => {
+        this.grid.deselectRows([this.rowID]);
+    }
+
+    /**
+    * @hidden
+    */
+    public get iconTemplate() {
+        let expandable = true;
+        if (this.grid.hasChildrenKey) {
+            expandable = this.rowData[this.grid.hasChildrenKey];
         }
+        if (!expandable) {
+            return this.defaultEmptyTemplate;
+        }
+        if (this.expanded) {
+            return this.grid.rowExpandedIndicatorTemplate || this.defaultExpandedTemplate;
+        } else {
+            return this.grid.rowCollapsedIndicatorTemplate || this.defaultCollapsedTemplate;
+        }
+    }
+
+    private endEdit(grid: IgxHierarchicalGridComponent) {
+        if (grid.crudService.inEditMode) {
+            grid.endEdit();
+        }
+        grid.hgridAPI.getChildGrids(true).forEach(g => {
+            if (g.crudService.inEditMode) {
+            g.endEdit();
+        }});
+    }
 }

@@ -21,6 +21,7 @@ import {
     AbsoluteScrollStrategy
 } from '../services/index';
 import { GridBaseAPIService } from './api.service';
+import { IgxButtonDirective } from '../directives/button/button.directive';
 import { IgxGridBaseComponent, IGridDataBindable } from './grid-base.component';
 import { IgxDropDownComponent } from '../drop-down/drop-down.component';
 import { IgxColumnHidingComponent } from './column-hiding.component';
@@ -37,7 +38,6 @@ import { ConnectedPositioningStrategy } from '../services/overlay/position';
     templateUrl: './grid-toolbar.component.html'
 })
 export class IgxGridToolbarComponent extends DisplayDensityBase {
-
     /**
      * @hidden
      */
@@ -104,8 +104,8 @@ export class IgxGridToolbarComponent extends DisplayDensityBase {
      * const hidingButton = this.grid.toolbar.columnHidingButton;
      * ```
      */
-    @ViewChild('columnHidingButton', { static: false })
-    public columnHidingButton;
+    @ViewChild('columnHidingButton', { read: IgxButtonDirective, static: false })
+    public columnHidingButton: IgxButtonDirective;
 
     /**
      * Provides a reference to the `IgxDropDownComponent` of the Export button.
@@ -122,8 +122,8 @@ export class IgxGridToolbarComponent extends DisplayDensityBase {
      * const exportBtn = this.grid.toolbar.exportButton;
      * ```
      */
-    @ViewChild('btnExport', { static: false })
-    public exportButton;
+    @ViewChild('btnExport', { read: IgxButtonDirective, static: false })
+    public exportButton: IgxButtonDirective;
 
     /**
      * Provides a reference to the `IgxDropDownComponent` of the Column Pinning UI.
@@ -149,8 +149,8 @@ export class IgxGridToolbarComponent extends DisplayDensityBase {
      * const pinningButton = this.grid.toolbar.columnPinningButton;
      * ```
      */
-    @ViewChild('columnPinningButton', { static: false })
-    public columnPinningButton;
+    @ViewChild('columnPinningButton', { read: IgxButtonDirective, static: false })
+    public columnPinningButton: IgxButtonDirective;
 
     /**
      * Returns a reference to the `IgxGridComponent` component, hosting the `IgxGridToolbarComponent`.
@@ -236,7 +236,6 @@ export class IgxGridToolbarComponent extends DisplayDensityBase {
         closeOnOutsideClick: true,
         excludePositionTarget: true
     };
-
 
     /**
      * Returns the title of `IgxGridToolbarComponent`.
@@ -349,6 +348,13 @@ export class IgxGridToolbarComponent extends DisplayDensityBase {
         this._overlaySettings.positionStrategy.settings.target = this.columnPinningButton.nativeElement;
         this._overlaySettings.outlet = this.grid.outletDirective;
         this.columnPinningDropdown.toggle(this._overlaySettings);
+    }
+
+    /**
+     * @hidden @internal
+     */
+    public showAdvancedFilteringUI() {
+        this.grid.openAdvancedFilteringDialog();
     }
 
     /**

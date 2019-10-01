@@ -15,7 +15,7 @@
 /// @param {Color} $item-background [null] - The list item background color.
 /// @param {Color} $item-background-hover [null] - The list item hover background color.
 /// @param {Color} $item-background-active [null] - The active list item background color.
-//
+///
 /// @param {Color} $item-text-color [null] - The list item text color.
 /// @param {Color} $item-text-color-hover [null] - The list item hover text color.
 /// @param {Color} $item-text-color-active [null] - The active list item text color.
@@ -328,6 +328,41 @@
         flex-flow: column wrap;
         justify-content: center;
         border-radius: --var($theme, 'item-border-radius');
+        color: --var($theme, 'item-text-color');
+        background: --var($theme, 'item-background');
+
+        &:hover {
+            color: --var($theme, 'item-text-color-hover');
+            background: --var($theme, 'item-background-hover');
+
+            %igx-list__item-lines {
+                color: currentColor;
+            }
+
+            %igx-list__item-line-title {
+                color: --var($theme, 'item-title-color-hover');
+            }
+
+            %igx-list__item-line-subtitle {
+                color: --var($theme, 'item-subtitle-color-hover');
+            }
+
+            %igx-list__item-actions {
+                color: --var($theme, 'item-action-color-hover');
+
+                %igx-icon-display {
+                    color: --var($theme, 'item-action-color-hover')
+                }
+            }
+
+            %igx-list__item-thumbnail {
+                color: --var($theme, 'item-thumbnail-color-hover');
+
+                %igx-icon-display {
+                    color: --var($theme, 'item-thumbnail-color-hover')
+                }
+            }
+        }
     }
 
     %igx-list-item-pan {
@@ -338,7 +373,7 @@
     }
 
     %igx-list__item-lines {
-        color: --var($theme, 'item-text-color');
+        color: currentColor;
         display: flex;
         flex-direction: column;
         flex: 1 0 0%;
@@ -381,43 +416,9 @@
         align-items: center;
         position: relative;
         padding: map-get($list-item-padding, 'comfortable');
-        color: --var($theme, 'item-text-color');
-        background: --var($theme, 'item-background');
         border-radius: --var($theme, 'item-border-radius');
+        background: inherit;
         z-index: 2;
-
-        &:hover {
-            color: --var($theme, 'item-text-color-hover');
-            background: --var($theme, 'item-background-hover');
-
-            %igx-list__item-lines {
-                color: currentColor;
-            }
-
-            %igx-list__item-line-title {
-                color: --var($theme, 'item-title-color-hover');
-            }
-
-            %igx-list__item-line-subtitle {
-                color: --var($theme, 'item-subtitle-color-hover');
-            }
-
-            %igx-list__item-actions {
-                color: --var($theme, 'item-action-color-hover');
-
-                %igx-icon-display {
-                    color: --var($theme, 'item-action-color-hover')
-                }
-            }
-
-            %igx-list__item-thumbnail {
-                color: --var($theme, 'item-thumbnail-color-hover');
-
-                %igx-icon-display {
-                    color: --var($theme, 'item-thumbnail-color-hover')
-                }
-            }
-        }
     }
 
     %igx-list-item-content--compact {
@@ -591,30 +592,28 @@
     $title: map-get($categories, 'title');
     $subtitle: map-get($categories, 'subtitle');
 
-    @include igx-scope('.igx-typography') {
-        %igx-list-header {
-            @include igx-type-style($type-scale, $header) {
-                margin: 0;
-            }
+    %igx-list-header {
+        @include igx-type-style($type-scale, $header) {
+            margin: 0;
         }
+    }
 
-        %igx-list-item {
-            @include igx-type-style($type-scale, $item) {
-                margin: 0;
-            }
+    %igx-list-item {
+        @include igx-type-style($type-scale, $item) {
+            margin: 0;
         }
+    }
 
-        %igx-list__item-lines,
-        %igx-list__item-line-title {
-            @include igx-type-style($type-scale, $title) {
-                margin: 0;
-            }
+    %igx-list__item-lines,
+    %igx-list__item-line-title {
+        @include igx-type-style($type-scale, $title) {
+            margin: 0;
         }
+    }
 
-        %igx-list__item-line-subtitle {
-            @include igx-type-style($type-scale, $subtitle) {
-                margin: 0;
-            }
+    %igx-list__item-line-subtitle {
+        @include igx-type-style($type-scale, $subtitle) {
+            margin: 0;
         }
     }
 }

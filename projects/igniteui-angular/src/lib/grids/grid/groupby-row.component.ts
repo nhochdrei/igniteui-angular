@@ -7,8 +7,10 @@ import {
     HostListener,
     Input,
     ViewChild,
+    TemplateRef,
 } from '@angular/core';
 import { IGroupByRecord } from '../../data-operations/groupby-record.interface';
+import { DataType } from '../../data-operations/data-util';
 import { GridBaseAPIService } from '../api.service';
 import { IgxGridBaseComponent, IGridDataBindable } from '../grid-base.component';
 import { IgxGridSelectionService, ISelectionNode } from '../../core/grid-selection';
@@ -36,6 +38,18 @@ export class IgxGridGroupByRowComponent {
      * @hidden
      */
     protected paddingIndentationCssClass = 'igx-grid__group-row--padding-level';
+
+    /**
+    * @hidden
+    */
+    @ViewChild('defaultGroupByExpandedTemplate', { read: TemplateRef, static: true })
+    protected defaultGroupByExpandedTemplate: TemplateRef<any>;
+
+    /**
+    * @hidden
+    */
+    @ViewChild('defaultGroupByCollapsedTemplate', { read: TemplateRef, static: true })
+    protected defaultGroupByCollapsedTemplate: TemplateRef<any>;
 
     /**
      * @hidden
@@ -176,6 +190,14 @@ export class IgxGridGroupByRowComponent {
         }
     }
 
+    public get iconTemplate() {
+        if (this.expanded) {
+            return this.grid.rowExpandedIndicatorTemplate || this.defaultGroupByExpandedTemplate;
+        } else {
+            return this.grid.rowCollapsedIndicatorTemplate || this.defaultGroupByCollapsedTemplate;
+        }
+    }
+
     protected get selectionNode(): ISelectionNode {
         return {
             row: this.index,
@@ -209,16 +231,10 @@ export class IgxGridGroupByRowComponent {
             }
             return;
         }
-        // TODO: to be deleted when onFocusChange event is removed #4054
-        const args = { cell: this, groupRow: null, event: event, cancel: false };
-        this.grid._onFocusChange.emit(args);
-        if (args.cancel) { return; }
 
         const selection = this.gridSelection;
         selection.keyboardState.shift = event.shiftKey && !(key === 'tab');
 
-        const visibleColumnIndex = selection.activeElement && this.grid.columnList.filter(col => !col.hidden).map(c => c.visibleIndex)
-            .indexOf(selection.activeElement.column) !== -1 ? selection.activeElement.column : 0;
         const activeNode = selection.activeElement ? Object.assign({}, selection.activeElement) : this.selectionNode;
         activeNode.row = this.index;
         switch (key) {
@@ -250,7 +266,8 @@ export class IgxGridGroupByRowComponent {
      * @hidden
      */
     get dataType(): any {
-        return this.grid.getColumnByName(this.groupRow.expression.fieldName).dataType;
+        const column = this.grid.getColumnByName(this.groupRow.expression.fieldName);
+        return (column && column.dataType) || DataType.String;
     }
 
     private handleTabKey(shift: boolean, activeNode: ISelectionNode) {

@@ -59,6 +59,12 @@ The DatePicker also supports binding through `ngModel` if two-way date-bind is n
 </igx-date-picker>
 ```
 
+A date-picker opening a calendar than one month in the view and hiding the days that are outside of the current month
+```html
+<igx-date-picker monthsViewNumber="2" [hideOutsideDays]="'true'">
+</igx-date-picker>
+```
+
 The DatePicker has `dropdown` mode as well. Custom display format and editor mask can be configured by setting the `format` and `mask` properties.
 ```html
 <igx-date-picker [(ngModel)]="myDateValue" mode="dropdown" mask="dd-MM-y">
@@ -81,7 +87,7 @@ In order to re-template a date picker in `dropdown` mode, you should pass the dr
 ```html
 <igx-date-picker>
     <ng-template igxDatePickerTemplate let-openDialog="openDialog" let-value="value" let-displayData="displayData">
-        <igx-input-group (click)="openDialog(dropDownTarget)" #dropDownTarget> 
+        <igx-input-group (click)="openDialog(dropDownTarget)" #dropDownTarget>
             <label igxLabel>Date</label>
             <input igxInput [value]="displayData"/>
         </igx-input-group>
@@ -127,16 +133,20 @@ The DatePicker action buttons could be retemplated.
 | `vertical` | `boolean` | Configure the calendar mode - horizontal or vertical in read-only datePicker. |
 | `mode` | `InteractionMode` | Configure the datePicker mode - `dialog` or `dropdown`. In `dropdown` mode, the datePicker input is editable and drop down calendar is displayed, in a `dialog` mode  - the input is read-only and calendar dialog appears to select a date.|
 | `isSpinLoop` | `boolean` | Configure whether the date parts would spin continuously or stop when min/max value is reached in `dropdown` mode.|
+| `monthViewsNumber` | `number` | Controls the number of month views displayed. |
+| `hideOutsideDays`| `boolean` | Controls the visibility of the dates that do not belong to the current month. |
 
 
 ### Outputs
 | Name | Return Type | Description |
 |:--:|:---|:---|
 | `onSelection` | `Date` | Fired when selection is made in the calendar. The event contains the selected value(s) based on the type of selection the component is set to |
-| `onOpen`  | `datePicker` | Emitted when a datePicker calendar is being opened. |
-| `onClose`  | `datePicker` | Emitted when a datePicker calendar is being closed. |
+| `onOpened`  | `datePicker` | Emitted when a datePicker calendar is opened. |
+| `onClosed`  | `datePicker` | Emitted when a datePicker calendar is closed. |
+| `onClosing`  | `CancelableBrowserEventArgs` | Emitted when a datePicker calendar is being closed. |
 | `onDisabledDate`  | `IDatePickerDisabledDateEventArgs` | Emitted when a disabled date is entered in `dropdown` mode. |
 | `onValidationFailed`  | `IDatePickerValidationFailedEventArgs` | Emitted when an invalid date is entered in `dropdown` mode. |
+| `valueChange` | `Date` | Fired when date picker value is changed |
 
 ### Methods
 | Name   | Arguments | Return Type | Description |

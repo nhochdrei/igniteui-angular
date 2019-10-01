@@ -170,7 +170,7 @@ export const enum KEYS {
  */
 export function getNodeSizeViaRange(range: Range, node: any): number {
     let overflow = null;
-    if (isIE() || isEdge()) {
+    if (!isFirefox()) {
         overflow = node.style.overflow;
         // we need that hack - otherwise content won't be measured correctly in IE/Edge
         node.style.overflow = 'visible';
@@ -179,7 +179,7 @@ export function getNodeSizeViaRange(range: Range, node: any): number {
     range.selectNodeContents(node);
     const width = range.getBoundingClientRect().width;
 
-    if (isIE() || isEdge()) {
+    if (!isFirefox()) {
         // we need that hack - otherwise content won't be measured correctly in IE/Edge
         node.style.overflow = overflow;
     }
@@ -228,6 +228,17 @@ export function isFirefox(): boolean {
 
 /**
  * @hidden
+ * TODO: make injectable, check isPlatformBrowser()
+ */
+export class PlatformUtil {
+    static isIOS(): boolean {
+        const iosBrowser = typeof window !== 'undefined' && /iPad|iPhone|iPod/.test(navigator.userAgent) && !('MSStream' in window);
+        return iosBrowser;
+    }
+}
+
+/**
+ * @hidden
  */
 export function isLeftClick(event: PointerEvent) {
     return event.button === 0;
@@ -260,6 +271,13 @@ export interface CancelableEventArgs {
      * Provides the ability to cancel the event.
      */
     cancel: boolean;
+}
+
+export interface IBaseEventArgs {
+    /**
+     * Provides reference to the owner component.
+     */
+    owner?: any;
 }
 
 export interface CancelableBrowserEventArgs extends CancelableEventArgs {
