@@ -4649,25 +4649,12 @@ export class IgxGridBaseDirective extends DisplayDensityBase implements
             this.filteringRow.resetChipsArea();
         }
 
-        this.cdr.detectChanges();
+        // this.cdr.detectChanges();
         // in case scrollbar has appeared recalc to size correctly.
         if (hasScroll !== this.hasVerticalSroll()) {
             this.calculateGridWidth();
             this.cdr.detectChanges();
         }
-        if (this.zone.isStable) {
-            this.zone.run(() => {
-                this._applyWidthHostBinding();
-                this.cdr.detectChanges();
-            });
-        } else {
-            this.zone.onStable.pipe(first()).subscribe(() => {
-                this.zone.run(() => {
-                    this._applyWidthHostBinding();
-                });
-            });
-        }
-        this.resetCaches();
     }
 
     private _applyWidthHostBinding() {
