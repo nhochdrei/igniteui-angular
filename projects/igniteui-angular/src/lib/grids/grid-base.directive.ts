@@ -4655,6 +4655,7 @@ export class IgxGridBaseDirective extends DisplayDensityBase implements
             this.calculateGridWidth();
             this.cdr.detectChanges();
         }
+        this.resetCaches();
     }
 
     private _applyWidthHostBinding() {
