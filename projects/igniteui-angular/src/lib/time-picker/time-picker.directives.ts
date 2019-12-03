@@ -209,6 +209,13 @@ export class IgxItemListDirective {
         }
     }
 
+    @HostListener('mouseup', ['$event'])
+    @HostListener('mousedown', ['$event'])
+    public onMouse(event) {
+        this.sumDeltaY = 0;
+        this.lastDeltaY = 0;
+    }
+
     @HostListener('document:touchstart', ['$event'])
     @HostListener('document:touchend', ['$event'])
     public onTouch(event) {
